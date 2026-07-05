@@ -1,0 +1,68 @@
+# ============================================================
+# HARNESS CONFIG — how the dark factory runs.
+# ============================================================
+
+llm:
+  # mode: "ollama" (real) or "mock" (deterministic fake output, for testing
+  # the pipeline without burning tokens). Env DARKFACTORY_LLM overrides.
+  mode: ollama
+  host: http://localhost:11434       # env OLLAMA_HOST overrides
+
+  # Model routing. Ollama Cloud models (run `ollama signin` once) appear as
+  # ordinary model names with a -cloud suffix and are served through the same
+  # local API — heavy reasoning happens in Ollama's cloud, orchestration stays
+  # on your MacBook Air. Swap these for whatever `ollama list` shows you.
+  planner_model: qwen3-coder:480b-cloud    # strategy, scoring, evolution
+  worker_model:  gpt-oss:120b-cloud        # listings, keywords, analysis
+  fast_model:    qwen3:8b                  # local fallback / cheap summaries
+
+  temperature: 0.4
+  request_timeout_s: 420
+  max_retries: 3
+
+  # Daily budget circuit-breaker. The factory stops calling models (and logs
+  # a SKIPPED episode) once this many calls have been made since midnight.
+  max_calls_per_day: 300
+
+# Which data provider backs each feed. "sample" ships with the repo and
+# lets everything run offline; switch to "spapi" once .env has credentials.
+datasources:
+  market: sample        # sample | spapi
+  ads: sample           # sample | spapi
+  reviews: sample       # sample | spapi
+  trends: auto          # auto = pytrends if installed, else skip
+
+# 24/7 schedule. Hours between runs of each skill. The orchestrator wakes
+# every minute, runs whatever is due, and persists last-run times in SQLite
+# so restarts never double-run or skip.
+schedule:
+  product_research: 6
+  supplier_sourcing: 24
+  keyword_seo: 24
+  listing_writer: 24
+  ad_optimizer: 12
+  review_miner: 24
+  evolution: 168        # weekly Darwin generation
+  digest: 24            # daily owner's report
+
+# Actions that must sit in the approval queue until YOU approve them.
+# The factory prepares everything; it never spends your money or touches
+# your live listings without a signed-off approval.
+require_approval:
+  - publish_listing
+  - change_bids
+  - change_budget
+  - place_order
+
+context:
+  budget_chars: 28000   # max prompt size assembled by the context manager
+  recall_items: 8       # how many memory hits get injected per prompt
+
+memory:
+  db_path: workspace/darkfactory.db
+
+evolution:
+  population_size: 6
+  elites: 2
+  mutation_scale: 0.15  # scaled further by objectives.risk_appetite
+  llm_mutation: true    # let the planner model propose one directed mutation
