@@ -170,7 +170,43 @@ Three rules they always follow:
    end in `-cloud`. If unsure, ask in the Ollama app which cloud models your
    plan includes.
 
+## The Console — your cockpit (use this instead of typing commands)
+
+```bash
+cd curly-broccoli && ./df console
+```
+
+One command opens the **Owner's Console** in your browser — a private local
+app (127.0.0.1 only; your data never leaves the Mac) that covers everything
+without typing another command:
+
+- **Dashboard** — what needs your signature, factory heartbeat, AI budget
+  meter, strategy fitness, the product funnel, and per-skill health with
+  one-click "Run now".
+- **Approvals** — every money decision as a card: what it is, who prepared
+  it, the key numbers, a "Read the full package" button, and Approve /
+  Reject with a confirmation step. Rejecting is always safe.
+- **Products** — the whole funnel, filterable by verdict. Click any product
+  for its score breakdown, risks, keywords — and a form to **log real
+  results** (units, margin, rating, cash-cycle days) that feeds evolution.
+- **Skills** — your analyst team as cards, each with a plain-English job
+  description and a Run-now button (runs in the background; you get a toast
+  with the result).
+- **Documents** — every digest and deliverable, rendered beautifully.
+- **Playbooks & Config** — edit your business law and coaching notes right
+  in the browser; YAML is validated *before* saving, so you can't break the
+  factory with a typo.
+- **Activity** — the full 3-day log of everything the factory did.
+- **Doctor** — the console solves its own problems: it checks configuration,
+  database, workspace, the Ollama daemon, your model names, the AI budget,
+  skill failures, the 24/7 heartbeat, aging approvals, and the launchd
+  service — each with a plain-English explanation and, where safe, a
+  **"Fix it for me"** button. Red badge on the sidebar = open the Doctor.
+
 ## Your daily 10 minutes (morning coffee routine)
+
+The console way: `./df console` → glance at the Dashboard → clear the
+Approvals queue → done. Or the terminal way:
 
 ```bash
 cd curly-broccoli          # always start here

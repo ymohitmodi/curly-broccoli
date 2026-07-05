@@ -9,6 +9,7 @@
   darkfactory candidates             show the product funnel
   darkfactory log-outcome <id> ...   feed REAL results back (this trains Darwin)
   darkfactory evolve                 force a generation step now
+  darkfactory console                open the Owner's Console (local web UI)
 """
 
 from __future__ import annotations
@@ -43,8 +44,22 @@ def main(argv=None):
     lo.add_argument("--cash-cycle-days", type=float, default=None,
                     help="days from supplier wire to full cash recovery — rewards capital velocity in fitness")
     sub.add_parser("evolve")
+    con = sub.add_parser("console")
+    con.add_argument("--port", type=int, default=8787)
+    con.add_argument("--no-browser", action="store_true")
 
     args = p.parse_args(argv)
+
+    if args.cmd == "console":  # no orchestrator needed up front
+        from .console import serve
+        httpd = serve(port=args.port, open_browser=not args.no_browser)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n[darkfactory] console stopped.")
+        return
+
+    orch = Orchestrator()
     orch = Orchestrator()
 
     if args.cmd == "run":
