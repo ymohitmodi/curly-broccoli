@@ -64,7 +64,19 @@ class Config:
 
 
 def load_config(root: Path | None = None) -> Config:
-    root = root or REPO_ROOT
+    """Resolve the project root holding config/, playbooks/, workspace/.
+
+    Priority: explicit arg → DARKFACTORY_ROOT env → current directory (if it
+    has config/objectives.yaml) → the repo containing this file. The cwd rule
+    makes non-editable installs work: run `darkfactory` from your project
+    directory and everything resolves there, not in site-packages."""
+    if root is None:
+        if os.environ.get("DARKFACTORY_ROOT"):
+            root = Path(os.environ["DARKFACTORY_ROOT"]).resolve()
+        elif (Path.cwd() / "config" / "objectives.yaml").exists():
+            root = Path.cwd()
+        else:
+            root = REPO_ROOT
     objectives = _load_yaml(root / "config" / "objectives.yaml")
     harness = _load_yaml(root / "config" / "harness.yaml")
 

@@ -69,17 +69,21 @@ git clone <this repo> && cd curly-broccoli
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .                   # + '.[trends]' for Google Trends
 
-# 3. Dry-run the ENTIRE factory offline, zero tokens (mock LLM + sample data)
+# 3. Verify every contract (13 tests: Ollama wire protocol, money math,
+#    Amazon field limits, failure isolation, approvals, full pipeline)
+python -m unittest tests.test_contracts -v
+
+# 4. Dry-run the ENTIRE factory offline, zero tokens (mock LLM + sample data)
 DARKFACTORY_LLM=mock python -m darkfactory once product_research
 DARKFACTORY_LLM=mock python -m darkfactory once supplier_sourcing
 python -m darkfactory status
 python -m darkfactory candidates
 
-# 4. Edit YOUR objectives and model choices
+# 5. Edit YOUR objectives and model choices
 $EDITOR config/objectives.yaml     # categories, margin floor, budget, exclusions
 $EDITOR config/harness.yaml        # model names from `ollama list`, cadences
 
-# 5. Go 24/7
+# 6. Go 24/7
 ./scripts/install_macos.sh         # launchd service: auto-start, auto-restart
 tail -f workspace/logs/darkfactory.log
 ```
