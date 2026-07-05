@@ -57,6 +57,21 @@ the factory grinds; you approve the money moves and read one daily digest.
 
 ## Quickstart (MacBook Air)
 
+**The easy way — one command does everything** (installs what's missing,
+verifies with 13 tests, dry-runs the pipeline, sets up the 24/7 service,
+and walks you through each step with plain-English prompts):
+
+```bash
+git clone <this repo> && cd curly-broccoli
+./scripts/setup_macos.sh
+```
+
+Then use the friendly `./df` shortcut for everything: `./df status`,
+`./df approvals`, `./df approve 3`. Full walkthrough for non-technical
+operators: see **The Owner's Manual** below.
+
+**The manual way**, if you prefer to see each step:
+
 ```bash
 # 1. Ollama with cloud models (heavy models run in Ollama's cloud,
 #    served through your local daemon — perfect for an Air)
@@ -103,6 +118,203 @@ python -m darkfactory log-outcome 7 --monthly-units 340 --margin-pct 0.38 --rati
 Read `workspace/reports/digest-<date>.md` every morning — funnel, approvals,
 activity, current genome. Deliverables (sourcing packages, listings, keyword
 maps, PPC change sheets) land in `workspace/artifacts/`.
+
+---
+
+# 🧭 The Owner's Manual
+
+*For a strong Amazon seller who is NOT a programmer. No jargon. This section
+tells you exactly what to do on day 1, every day, every week, and how to
+squeeze more money out of the system over time.*
+
+## What you actually bought yourself here, in plain words
+
+Think of this as **hiring a tireless analyst team** that works while you
+sleep: a product researcher, a sourcing manager, a keyword specialist, a
+copywriter, a launch manager, a PPC manager, a review analyst, and a CFO
+watching your cash. They live inside your MacBook. Every few hours each one
+does its job and files its work as simple documents you can read.
+
+Three rules they always follow:
+
+1. **They never spend your money.** Anything that costs money — placing an
+   order, publishing a listing, changing ad bids — goes into a queue and
+   waits for YOUR signature (`./df approve`). You are the only wallet.
+2. **They never do math by "gut feel."** Margins, tariffs, fees, cash
+   timelines are calculated by fixed formulas, not by AI guessing.
+3. **They learn from results.** When you tell the system how a product
+   actually performed, its strategy literally evolves toward what made
+   you money (that's the "Darwin" part).
+
+## Day 1 — set it up (30 minutes, mostly waiting)
+
+1. Open the **Terminal** app (press `⌘+Space`, type `Terminal`, hit Enter).
+2. Paste these two lines and press Enter (replace the address with your
+   repo's address from GitHub's green "Code" button):
+
+   ```bash
+   git clone <this repo> && cd curly-broccoli
+   ./scripts/setup_macos.sh
+   ```
+3. Answer the yes/no questions it asks (it explains each one). When it
+   finishes, your factory is installed, verified, and running 24/7.
+4. **The one file you must make yours:** open `config/objectives.yaml` in
+   TextEdit (`open -e config/objectives.yaml`). This is your business on one
+   page — the categories you hunt in, your launch budget, your margin floor,
+   what you refuse to sell. The factory obeys this file like law. Edit the
+   numbers to match YOUR situation, save, done. (The AI can never override
+   this file — only you can.)
+5. **Tell it which AI models to use:** run `ollama list` in Terminal, then
+   open `config/harness.yaml` (`open -e config/harness.yaml`) and set
+   `planner_model` and `worker_model` to names from that list — cloud models
+   end in `-cloud`. If unsure, ask in the Ollama app which cloud models your
+   plan includes.
+
+## Your daily 10 minutes (morning coffee routine)
+
+```bash
+cd curly-broccoli          # always start here
+open workspace/reports/    # 1. read today's digest (2 min)
+./df approvals             # 2. see what's waiting for your signature
+./df approve 3             # 3. approve what you agree with (by number)
+./df status                # 4. green check: everything running, no failures
+```
+
+**Reading the digest** (it's one page, always the same shape):
+- **"Your approval queue"** — the only part that needs action. Each line is
+  a money decision the factory prepared and is waiting on.
+- **"Product funnel"** — how many ideas → sourcing → listing → live. If the
+  funnel is empty for days, your constraints may be too tight (see
+  "Improving" below).
+- **"Last 24h activity"** — one line per thing each analyst did. Skim it.
+- **"Active strategy genome"** — the strategy dials the system currently
+  believes in. You don't need to touch these; they evolve on their own.
+
+**Before you approve an order (`place_order`)**: open the matching sourcing
+package in `workspace/artifacts/` — it shows the negotiation plan, the FOB
+price to fight for, the walk-away price, AND the full cash timeline (when
+money leaves, when it comes back, and how much is tied up at peak). If the
+cash plan says your money is stuck for 10 months — reject it. That's the
+system doing its job.
+
+## Your weekly 20 minutes
+
+1. Skim the week's **artifacts** (`open workspace/artifacts/`): sourcing
+   packages, keyword maps, listing drafts, launch plans, PPC change sheets.
+   These are your deliverables — use them in Alibaba chats, Seller Central,
+   and your ad console.
+2. **Feed results back** (this is the single highest-leverage habit):
+   for every live product, once a week tell the factory the truth:
+
+   ```bash
+   ./df log-outcome 7 --monthly-units 340 --margin-pct 0.38 --rating 4.6 --cash-cycle-days 150
+   ```
+
+   (#7 is the candidate number from `./df candidates`.) Every Sunday night
+   the strategy evolves against these real numbers. **No feedback = no
+   evolution.** Sellers who skip this step own a clever toy; sellers who do
+   it own a system that gets measurably better every week.
+3. Glance at `./df candidates` — anything marked PURSUE that you disagree
+   with? That disagreement is information: tighten `objectives.yaml` so the
+   factory learns your taste.
+
+## Keeping it running 24/7 (and knowing that it is)
+
+- **Is it alive?** → `./df status`. Every skill shows its last run time.
+  If "last run" times are recent, it's working.
+- **The Mac must be awake to work.** Three good setups:
+  - *Best:* keep the MacBook plugged in, lid open, and let the setup script's
+    "prevent sleep on power" option do its thing. Screen can be off
+    (brightness zero) — that's fine.
+  - *Good:* plugged in with lid closed **plus** an external display or
+    "Amphetamine"-style app — or just accept catch-up mode:
+  - *Acceptable:* let it sleep. Nothing breaks and nothing is lost — the
+    factory remembers its schedule and runs everything that's due the moment
+    the Mac wakes. You lose "24/7", you keep "every day".
+- **It restarts itself.** The background service (launchd) relaunches the
+  factory if it ever crashes, and starts it automatically when you log in.
+- **If something looks stuck:**
+  ```bash
+  tail -20 workspace/logs/darkfactory.err   # what went wrong, last lines
+  launchctl unload ~/Library/LaunchAgents/com.darkfactory.harness.plist
+  launchctl load ~/Library/LaunchAgents/com.darkfactory.harness.plist   # restart
+  ```
+- **A failing skill never stops the others.** If one analyst hits an error
+  (e.g. a data source is down), it backs off and retries later while the
+  rest keep working. `./df status` shows a failure count per skill — a
+  number above 0 that keeps climbing for a day is worth a look in the logs.
+- **Cost control is built in.** The factory stops calling AI models after
+  `max_calls_per_day` (in `config/harness.yaml`) and resumes at midnight —
+  it can never run away with your token budget.
+
+## Troubleshooting for humans
+
+| What you see | What it means | What to do |
+|---|---|---|
+| `./df status` shows old "last run" times | Mac was asleep or service stopped | Wake/plug in the Mac; restart the service (two `launchctl` lines above) |
+| A skill shows failures: 3+ | A data source or model call keeps failing | `tail -40 workspace/logs/darkfactory.err`; usually Ollama isn't running → open the Ollama app |
+| "Daily LLM budget reached" in digest | Factory hit its own spending brake | Fine. It resumes at midnight. Raise `max_calls_per_day` if you want more |
+| Funnel empty for a week | Your gates are (correctly) strict, or market data is stale | See "Improving" ladder below — loosen ONE constraint at a time, or wire real data |
+| An approval you don't understand | Never approve blind | Open the artifact file named in the approval; if still unclear, `./df reject <id>` — rejecting is always safe |
+
+## How to improve results — the ladder (climb one rung at a time)
+
+**Rung 1 — Make the objectives truly yours (day 1, 15 min).**
+Everything in `config/objectives.yaml` is a business decision only you can
+make: categories you know, budget you can lose, margin you demand. Garbage
+in, garbage out; sharp in, sharp out.
+
+**Rung 2 — Feed it real market research (week 1, zero coding).**
+The built-in sample data proves the machine works, but decisions need your
+data. Export competitor reviews from tools you already use and drop the file
+at `workspace/inbox/reviews.json`; keep a simple inventory file at
+`workspace/inbox/inventory.json` (`[{"candidate_id": 7, "units_on_hand": 260,
+"units_inbound": 0}]`). The review miner and cash planner pick these up
+automatically.
+
+**Rung 3 — Log outcomes religiously (every week, 2 min per product).**
+`./df log-outcome …` as above. This is the flywheel. Skipping it is like
+hiring a great team and never telling them what sold.
+
+**Rung 4 — Edit the playbooks like you'd coach an employee (monthly).**
+The files in `playbooks/` are plain English instructions each analyst reads
+before every task. Learned something the hard way — a supplier trick, a
+listing angle that converts, a PPC pattern? Write it into the matching
+playbook. No code. The very next run obeys it. Also refresh
+`playbooks/benchmarks.md` quarterly (fees and tariffs move — ask any AI
+chat to update the numbers, paste them in).
+
+**Rung 5 — Wire your real Amazon data (one-time, ~an hour with a helper).**
+Free for registered sellers: Seller Central → Apps & Services → Develop
+Apps → create credentials → paste into `.env` (copy `.env.example`) → flip
+`datasources:` in `config/harness.yaml` from `sample` to `spapi`. This is
+the biggest single jump in decision quality: real prices, real fees, real
+search terms. The file `darkfactory/datasources/spapi.py` tells a developer
+(or an AI coding assistant) exactly what to fill in.
+
+**Rung 6 — Tune the evolution (advanced, optional).**
+Raise `risk_appetite` in objectives.yaml (0.4 → 0.6) to let strategy mutate
+more boldly; widen a gene's range in `darkfactory/evolution.py` if you want
+Darwin exploring further (e.g. higher launch aggression). Watch the digest's
+fitness number over a month — it should trend up.
+
+## What NOT to do
+
+- **Don't approve orders without opening the sourcing artifact.** The
+  approval queue is a signature, not a rubber stamp.
+- **Don't skip the golden sample.** No cash plan survives a bad factory
+  batch — validate a physical sample before the balance payment, always.
+- **Don't scrape amazon.com for data.** It violates the seller agreement you
+  signed and risks the account this whole machine feeds. SP-API is the
+  legitimate free pipe.
+- **Don't run two big launches inside one cash cycle** unless the
+  cash-inventory ledger explicitly shows headroom. The factory will warn
+  you ("OVER-COMMITTED") — believe it.
+- **Don't edit files inside `darkfactory/`** unless you know Python. Your
+  levers are `config/*.yaml`, `playbooks/*.md`, approvals, and log-outcome —
+  they're designed to be all you need.
+
+---
 
 ## The skills
 
