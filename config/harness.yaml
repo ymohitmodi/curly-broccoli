@@ -40,8 +40,10 @@ schedule:
   supplier_sourcing: 24
   keyword_seo: 24
   listing_writer: 24
+  launch_strategist: 24 # 90-day launch plans for drafted listings
   ad_optimizer: 12
   review_miner: 24
+  inventory_planner: 12 # cash conversion cycle, reorder points, WC ledger
   evolution: 168        # weekly Darwin generation
   digest: 24            # daily owner's report
 

@@ -41,3 +41,18 @@ pricing-power signals (premium positioning viable? gift-ability? bundle potentia
 - IP/patent smell (unique patented mechanism cloned across few sellers)
 - demand driven by one viral moment
 - niches where >50% of page one is a single brand
+
+## 2026 tariff-era selection criteria (35% effective duty on China goods)
+- **Value density wins**: duty is ad valorem and freight is per-kg, so favor
+  high price-to-weight and high price-to-FOB products. A $4 FOB item selling
+  at $28 absorbs the tariff; a $9 FOB item selling at $19 dies.
+- **Repeat purchase is a margin subsidy**: reorders arrive with zero new
+  customer-acquisition cost. Weight demand UP for consumable-adjacent or
+  naturally re-bought products (pet, kitchen wear-items, refills).
+- **Cash velocity is a scoring axis in disguise**: two products with equal
+  margin are NOT equal — the one that sells through its PO faster compounds
+  faster. Reflect expected sell-through speed in operational_simplicity.
+- Half of Amazon's largest sellers are China-based and face the same tariffs
+  with thinner cushions — niches where differentiation (not price) decides
+  the buy box got RELATIVELY more attractive. Differentiation weight matters
+  more than ever.

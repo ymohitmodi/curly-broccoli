@@ -57,15 +57,40 @@ risk_appetite: 0.4
 
 # Default economics assumptions used by the landed-cost model when a
 # candidate doesn't yet have real quotes. Update as you get real numbers.
+# 2026 reality baked in: tariff stack on Chinese consumer goods is ~35%
+# effective (MFN base + 25% Section 301 + 10% Section 122; the 20% IEEPA
+# surcharge was struck down Feb 2026). De minimis is dead — everything
+# clears formal entry. Amazon added a 3.5% fuel surcharge on fulfillment
+# fees (Apr 2026), restructured inbound placement fees (Jan 2026), and
+# charges a low-inventory-level fee (~$0.89-1.10/unit) when supply drops
+# below ~28 days against a 35-day threshold.
 economics_defaults:
   sea_freight_per_kg_usd: 1.9
-  duty_rate: 0.25                    # assume section-301 tariff worst case
+  duty_rate: 0.35                    # 2026 China stack (S301 25% + S122 10%)
   referral_rate: 0.15
   returns_rate: 0.03
-  storage_per_unit_month_usd: 0.45
+  storage_per_unit_month_usd: 0.45   # Jan-Sep rate; Oct-Dec peak is ~3x
   misc_rate: 0.02                    # inspection, prep, defects
+  fuel_surcharge_rate: 0.035         # on FBA fulfillment fee, eff. Apr 2026
+  inbound_placement_per_unit_usd: 0.30  # ~0 if using Amazon-optimized splits (5+ identical cartons)
+  low_inventory_fee_risk_usd: 0.10   # expected value of the low-inventory fee
   fba_fee_by_weight_kg:              # rough US FBA fulfillment fee ladder
     0.2: 3.5
     0.5: 4.0
     0.9: 5.4
     1.5: 6.9
+
+# Cash-flow model inputs — THE silent killer. A typical FBA launch is ~20
+# weeks of working capital (wire day 0 → live ~day 80 → cash recovered
+# day 140+), and most sellers underestimate it by ~30%. The factory
+# computes this before every PO approval.
+cashflow:
+  supplier_deposit_frac: 0.30        # 30/70 payment terms
+  production_days: 30
+  freight_days: 45                   # sea, door to FBA
+  fba_checkin_days: 7
+  amazon_payout_lag_days: 14
+  low_inventory_threshold_days: 35   # Amazon's 2026 threshold
+  min_capital_turns_per_year: 2.0    # reject products that lock cash too long
+  max_launch_cash_frac: 0.75         # a PO may consume at most 75% of launch budget
+                                     # (rest is reserved for ads/Vine/photos)

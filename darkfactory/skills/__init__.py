@@ -12,8 +12,10 @@ from . import (  # noqa: F401  (import for side-effect: registration)
     supplier_sourcing,
     keyword_seo,
     listing_writer,
+    launch_strategist,
     ad_optimizer,
     review_miner,
+    inventory_planner,
     evolution_skill,
     digest,
 )

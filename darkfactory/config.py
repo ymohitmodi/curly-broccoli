@@ -44,11 +44,17 @@ class Config:
         return p
 
     def playbook(self, skill_name: str) -> str:
-        """Load the editable domain playbook for a skill (playbooks/<name>.md)."""
+        """Load the editable domain playbook for a skill (playbooks/<name>.md),
+        plus the shared benchmarks file (playbooks/benchmarks.md) that grounds
+        every skill in researched market numbers instead of model vibes."""
+        parts = []
         path = self.root / "playbooks" / f"{skill_name}.md"
         if path.exists():
-            return path.read_text(encoding="utf-8")
-        return ""
+            parts.append(path.read_text(encoding="utf-8"))
+        bench = self.root / "playbooks" / "benchmarks.md"
+        if bench.exists():
+            parts.append(bench.read_text(encoding="utf-8"))
+        return "\n\n".join(parts)
 
     def llm(self, key: str, default: Any = None) -> Any:
         return self.harness.get("llm", {}).get(key, default)

@@ -68,20 +68,31 @@ class SupplierSourcing(Skill):
             target_econ = economics.from_defaults(ctx.cfg, sale_price=price,
                                                   fob_unit=float(out.get("target_fob_usd", fob)),
                                                   unit_weight_kg=weight)
-            md = self._render(cand, out, econ, target_econ)
+            # the cash truth of this PO, sized to the launch budget
+            max_po_cash = budget * ctx.cfg.objectives.get("cashflow", {}).get("max_launch_cash_frac", 0.75)
+            po_units = max(int(max_po_cash / max(target_econ["landed_cost"], 0.01)), 1)
+            cash = economics.launch_cash_plan(
+                ctx.cfg, po_units=po_units, landed_unit_cost=target_econ["landed_cost"],
+                unit_profit=target_econ["unit_profit"],
+                monthly_units=ctx.cfg.constraint("target_monthly_units", 300),
+                launch_ad_budget=budget - max_po_cash)
+            md = self._render(cand, out, econ, target_econ, cash, po_units)
             path = ctx.write_artifact(f"sourcing-c{cand['id']}.md", md)
             ctx.memory.update_candidate(cand["id"], stage="sourcing")
             gate_msg = ctx.gate(self.name, "place_order",
                                 {"candidate_id": cand["id"], "name": cand["name"],
                                  "target_fob_usd": out.get("target_fob_usd"),
                                  "walkaway_fob_usd": out.get("walkaway_fob_usd"),
+                                 "po_units": po_units,
+                                 "peak_working_capital": cash["peak_working_capital"],
+                                 "cash_recovered_day": cash["cash_recovered_day"],
                                  "artifact": str(path)})
             done.append(f"#{cand['id']} {cand['name'][:40]} ({gate_msg})")
 
         return {"summary": f"Sourcing packages built for {len(done)}: " + "; ".join(done)}
 
     @staticmethod
-    def _render(cand, out, econ_now, econ_target) -> str:
+    def _render(cand, out, econ_now, econ_target, cash, po_units) -> str:
         ladder = "\n".join(f"{i+1}. **{s['step']}** — ask: {s['ask']} | give: {s['give']}"
                            for i, s in enumerate(out.get("negotiation_ladder", [])))
         return f"""# Sourcing Package — {cand['name']} (candidate #{cand['id']})
@@ -93,6 +104,16 @@ class SupplierSourcing(Skill):
 | unit profit | ${econ_now['unit_profit']} | ${econ_target['unit_profit']} |
 | net margin | {econ_now['net_margin_pct']:.0%} | {econ_target['net_margin_pct']:.0%} |
 | ROI | {econ_now['roi_pct']:.0%} | {econ_target['roi_pct']:.0%} |
+
+## Cash plan at target FOB ({po_units} units)
+- PO cost **${cash['po_cost']:,}** — deposit ${cash['deposit_day0']:,} day 0,
+  balance ${cash['balance_at_shipment']:,} at shipment
+- Live ~day {cash['live_day']} · first payout ~day {cash['first_payout_day']}
+  · cash fully recovered ~day {cash['cash_recovered_day']}
+- Peak working capital **${cash['peak_working_capital']:,}** ·
+  expected profit on PO ${cash['expected_profit_on_po']:,} ·
+  {cash['capital_turns_per_year']} capital turns/yr ·
+  annualized ROI {cash['annualized_roi_pct']:.0%}
 
 **Walkaway FOB:** ${out.get('walkaway_fob_usd')} — above this the deal fails your margin floor.
 **MOQ strategy:** {out.get('moq_strategy')}

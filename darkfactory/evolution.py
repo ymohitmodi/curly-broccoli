@@ -33,9 +33,11 @@ GENE_SPACE: dict[str, tuple[float, float, float]] = {
     "min_composite_pursue":   (0.62, 0.45, 0.80),  # score needed for PURSUE verdict
     "max_review_moat_frac":   (1.00, 0.40, 1.20),  # × objectives.max_top10_avg_reviews
     "keyword_longtail_bias":  (0.60, 0.20, 0.90),  # 1.0 = only long-tail
-    "ad_target_acos":         (0.30, 0.15, 0.45),  # launch-phase target ACOS
+    "ad_target_acos":         (0.30, 0.15, 0.45),  # steady-state target ACOS
     "ad_bid_step":            (0.15, 0.05, 0.30),  # relative bid adjustment step
     "price_position":         (0.50, 0.20, 0.85),  # 0=undercut market, 1=premium
+    "launch_acos_multiplier": (1.60, 1.00, 2.50),  # honeymoon: buy velocity above target ACOS
+    "inventory_cover_days":   (75.0, 45.0, 100.0), # reorder target between low-inv fee & storage bloat
 }
 
 WEIGHT_GENES = ["w_demand", "w_competition_gap", "w_margin",
@@ -98,10 +100,19 @@ def genome_fitness(memory, genome_id: int) -> float:
     for c in cands:
         o = c.get("outcome") or {}
         if o:
-            margin = float(o.get("margin_pct", 0))
-            units_ratio = min(float(o.get("monthly_units", 0)) / max(float(o.get("target_units", 300)), 1), 1.5)
-            rating = float(o.get("rating", 0)) / 5.0
-            realized.append(max(0.0, min(1.0, 0.5 * margin / 0.35 * 0.5 + 0.3 * units_ratio / 1.5 + 0.2 * rating)))
+            # Profit quality: margin vs. 35% floor
+            margin_n = min(float(o.get("margin_pct", 0)) / 0.35, 1.5) / 1.5
+            # Turnover: units vs. target
+            units_n = min(float(o.get("monthly_units", 0)) / max(float(o.get("target_units", 300)), 1), 1.5) / 1.5
+            # Delight: rating vs. 5
+            rating_n = float(o.get("rating", 0)) / 5.0
+            # Capital velocity: cash conversion cycle → turns/year, 4+/yr = perfect.
+            # This is what separates "profitable on paper" from "compounding":
+            # the same margin at 2x the capital turns makes ~2x the annual cash.
+            ccd = float(o.get("cash_conversion_days", 0) or 0)
+            turns_n = min((365.0 / ccd) / 4.0, 1.0) if ccd else 0.5  # unknown = neutral
+            realized.append(max(0.0, min(1.0,
+                0.35 * margin_n + 0.25 * units_n + 0.15 * rating_n + 0.25 * turns_n)))
     if realized:
         return round(0.4 * projected + 0.6 * statistics.mean(realized), 4)
     return round(projected, 4)

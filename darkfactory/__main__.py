@@ -40,6 +40,8 @@ def main(argv=None):
     lo.add_argument("--monthly-units", type=float, required=True)
     lo.add_argument("--margin-pct", type=float, required=True, help="realized net margin, e.g. 0.38")
     lo.add_argument("--rating", type=float, required=True)
+    lo.add_argument("--cash-cycle-days", type=float, default=None,
+                    help="days from supplier wire to full cash recovery — rewards capital velocity in fitness")
     sub.add_parser("evolve")
 
     args = p.parse_args(argv)
@@ -75,6 +77,8 @@ def main(argv=None):
         target = orch.cfg.constraint("target_monthly_units", 300)
         outcome = {"monthly_units": args.monthly_units, "margin_pct": args.margin_pct,
                    "rating": args.rating, "target_units": target}
+        if args.cash_cycle_days:
+            outcome["cash_conversion_days"] = args.cash_cycle_days
         orch.memory.update_candidate(args.candidate_id, outcome=outcome, stage="live")
         orch.memory.log_episode("owner", "outcome",
                                 f"candidate #{args.candidate_id} real results: "

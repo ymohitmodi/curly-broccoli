@@ -105,13 +105,41 @@ maps, PPC change sheets) land in `workspace/artifacts/`.
 | skill | cadence | output |
 |---|---|---|
 | `product_research` | 6h | hard-filtered, genome-scored candidate shortlist + seed keywords |
-| `supplier_sourcing` | 24h | Alibaba RFQ, spec sheet, negotiation ladder, target/walkaway FOB, QC checklist |
+| `supplier_sourcing` | 24h | Alibaba RFQ, spec sheet, negotiation ladder, target/walkaway FOB, QC checklist, **full PO cash plan** |
 | `keyword_seo` | 24h | 40–60 term clustered keyword map (tier/intent/placement/relevance) |
 | `listing_writer` | 24h | full listing: title, bullets, description, backend terms (limits enforced in code), A+ outline, image brief |
+| `launch_strategist` | 24h | 90-day launch plan: honeymoon phases, Vine, New Selection credits, PPC ramp, **kill criteria** |
 | `ad_optimizer` | 12h | rules-first PPC change sheet: negatives, harvests, bid steps toward genome ACOS |
 | `review_miner` | 24h | complaint→spec-upgrade and delight→copy-angle extraction |
+| `inventory_planner` | 12h | cash-conversion-cycle plans, reorder points vs. low-inventory fee, working-capital ledger |
 | `evolution` | weekly | fitness scoring + next genome generation (incl. one LLM-directed mutation) |
 | `digest` | 24h | the owner's report |
+
+## Research-grounded (July 2026)
+
+The factory's numbers come from current research, not folklore, and live in
+`playbooks/benchmarks.md` — injected into **every** prompt so no skill
+reasons from stale training data:
+
+- **2026 cost stack**: ~35% effective China tariff (25% Section 301 + 10%
+  Section 122; IEEPA struck down Feb 2026, de minimis gone), Amazon's 3.5%
+  fuel surcharge, inbound placement fees, low-inventory-level fee
+  ($0.89–1.10/unit under ~28 days supply), 3× peak-season storage — all in
+  `economics.py`.
+- **Cash is the killer**: research shows the typical launch ties up working
+  capital ~20 weeks and sellers underestimate it by ~30%. Every PO approval
+  now shows deposit→live→payout→recovery day by day, capital turns/yr, and a
+  velocity floor (`min_capital_turns_per_year`) rejects products that would
+  turn your business into a warehouse.
+- **Launch physics**: 2–4 week honeymoon, 20+ reviews in 30 days, Vine per
+  functional variation ($200/parent, 30 units), New Selection Program
+  credits, front-loaded launch ACOS — encoded in `launch_strategist` and its
+  playbook, with the aggression level (`launch_acos_multiplier`) as a Darwin
+  gene.
+- **Fitness = compounding, not vanity**: realized fitness now weights capital
+  velocity 25% alongside margin 35%, turnover 25%, rating 15% — the same
+  margin at twice the capital turns makes twice the annual cash, and Darwin
+  now knows it. Log `--cash-cycle-days` with your outcomes to feed it.
 
 Each skill's *craft* lives in an editable markdown playbook (`playbooks/*.md`)
 that is injected into its prompts — raise the bar by editing prose, not code.

@@ -102,7 +102,7 @@ class ProductResearch(Skill):
             scores = {k: max(0.0, min(1.0, float(v))) for k, v in cand.get("scores", {}).items()}
             comp = composite_score(scores, params)
             verdict = "PURSUE" if comp >= threshold else ("WATCH" if comp >= threshold - 0.12 else "DROP")
-            src = by_niche.get(cand.get("niche", ""), {})
+            src = self._match_niche(cand.get("niche", ""), by_niche)
             cid = mem.add_candidate(
                 name=cand.get("product_concept", cand.get("niche", "?")),
                 category=src.get("category", "?"),
@@ -126,6 +126,20 @@ class ProductResearch(Skill):
         return {"summary": (f"Scored {len(out.get('candidates', []))} candidates "
                             f"({pursued} PURSUE) from {len(survivors)} surviving niches; report {path.name}"),
                 "pursued": pursued}
+
+    @staticmethod
+    def _match_niche(name: str, by_niche: dict[str, dict]) -> dict:
+        """Attach model output back to source market data even if the model
+        reworded the niche. Exact → substring → sole-survivor fallback."""
+        if name in by_niche:
+            return by_niche[name]
+        low = name.lower()
+        for k, v in by_niche.items():
+            if low and (low in k.lower() or k.lower() in low):
+                return v
+        if len(by_niche) == 1:
+            return next(iter(by_niche.values()))
+        return {}
 
     def _prefilter(self, ctx: SkillContext, n: dict) -> tuple[bool, list[str], dict | None]:
         cfg = ctx.cfg
