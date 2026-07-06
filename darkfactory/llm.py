@@ -53,6 +53,25 @@ class BaseLLM:
             raw = self.chat(repair, model=model, temperature=0.0, json_schema=schema)
             return _parse_json(raw)
 
+    def chat_json_refined(self, messages: list[dict], schema: dict, critique: str, *,
+                          model: str | None = None) -> Any:
+        """Draft → self-critique against a rubric → revised final.
+
+        Single-pass output is first-draft quality; forcing the model to attack
+        its own draft with an explicit rubric before finalizing measurably
+        raises accuracy for judgment tasks (scoring, copy, negotiation). Costs
+        one extra call — reserve it for outputs that decide money."""
+        draft = self.chat_json(messages, schema, model=model)
+        revise = messages + [
+            {"role": "assistant", "content": json.dumps(draft, default=str)},
+            {"role": "user", "content":
+                "Critique your draft ruthlessly against this rubric, then output the "
+                "IMPROVED version. Fix every weakness you find; keep what is strong.\n\n"
+                f"RUBRIC:\n{critique}\n\n"
+                "Respond with ONLY the improved JSON (same schema)."},
+        ]
+        return self.chat_json(revise, schema, model=model, temperature=0.2)
+
 
 class OllamaClient(BaseLLM):
     def __init__(self, cfg, memory=None):
@@ -156,7 +175,10 @@ def _fill_schema(schema: dict, depth: int = 0) -> Any:
         return 7
     if t == "boolean":
         return True
-    return f"mock-{schema.get('description', 'value')[:40]}" if isinstance(schema.get("description"), str) else "mock-value"
+    # strings carry a digit so evidence-citation gates behave as with a real
+    # model (which is instructed to cite numbers)
+    return (f"mock-42 {schema.get('description', 'value')[:40]}"
+            if isinstance(schema.get("description"), str) else "mock-value 42")
 
 
 def make_llm(cfg, memory=None) -> BaseLLM:

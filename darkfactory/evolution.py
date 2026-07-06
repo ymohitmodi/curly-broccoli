@@ -88,13 +88,23 @@ def composite_score(scores: dict, params: dict) -> float:
 
 
 def genome_fitness(memory, genome_id: int) -> float:
-    """0.6 × projected quality (top-3 candidate composites) +
-       0.4 × realized outcomes (when you log real sales via `log-outcome`)."""
+    """Judge-vs-policy fitness. The genome is the POLICY (which candidates it
+    pursues); the JUDGE is the code-computed objective score (margin, ROI,
+    demand, moat — see quality.objective_score), NOT the genome-weighted
+    composite. Judging genomes by their own composite would reward genomes
+    that flatter candidates; judging by the objective score rewards genomes
+    whose weights select objectively good bets. Realized outcomes you log
+    dominate once they exist."""
     cands = [c for c in memory.list_candidates(limit=500) if c["genome_id"] == genome_id]
     if not cands:
         return 0.0
-    composites = sorted((c["composite"] or 0.0 for c in cands), reverse=True)[:3]
-    projected = statistics.mean(composites)
+
+    def judge(c):
+        s = c.get("scores") or {}
+        return float(s.get("objective", c["composite"] or 0.0))  # legacy fallback
+
+    pursued = [c for c in cands if c["verdict"] == "PURSUE"] or cands
+    projected = statistics.mean(sorted((judge(c) for c in pursued), reverse=True)[:3])
 
     realized = []
     for c in cands:

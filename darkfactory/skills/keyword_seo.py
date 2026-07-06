@@ -4,7 +4,10 @@ Long-tail bias comes from the genome — Darwin learns how deep to fish."""
 
 from __future__ import annotations
 
+import json
+
 from .base import Skill, SkillContext, register
+from .. import quality
 
 SCHEMA = {
     "type": "object",
@@ -52,15 +55,38 @@ class KeywordSeo(Skill):
                 genome=ctx.genome,
                 recall_query=f"keywords seo {cand['niche']}",
             )
-            out = ctx.llm.chat_json(messages, SCHEMA, model=getattr(ctx.llm, "worker_model", None))
+            worker = getattr(ctx.llm, "worker_model", None)
+            out = ctx.llm.chat_json(messages, SCHEMA, model=worker)
+
+            # code-enforced quality: dedupe/normalize, then check count and
+            # tier mix against the genome's bias — one corrective re-prompt
+            # if the model ignored the brief
+            qa = quality.clean_keyword_map(out.get("keywords", []), bias)
+            if not (qa["mix_ok"] and qa["count_ok"]):
+                retry = messages + [
+                    {"role": "assistant", "content": json.dumps(out)},
+                    {"role": "user", "content":
+                        f"Quality gate failed: {qa['notes']}. Requirements: >= 40 unique terms "
+                        f"and a long-tail fraction within ±18% of {bias:.0%}. Rebalance and "
+                        "return the corrected full map as JSON only."},
+                ]
+                try:
+                    out = ctx.llm.chat_json(retry, SCHEMA, model=worker)
+                    qa = quality.clean_keyword_map(out.get("keywords", []), bias)
+                except Exception:
+                    pass  # keep the first map rather than fail the run
+            kw_clean = qa["keywords"]
+
             rows = [{"keyword": k["keyword"], "intent": f"{k['tier']}/{k['intent']}/{k['placement']}",
                      "source": "keyword_seo", "score": float(k.get("relevance", 0.5))}
-                    for k in out.get("keywords", [])]
+                    for k in kw_clean]
             ctx.memory.add_keywords(cand["id"], rows)
 
             md = [f"# Keyword Map — {cand['name']} (candidate #{cand['id']})", "",
+                  f"Quality gate: {qa['notes']} — mix {'OK' if qa['mix_ok'] else 'off-target'}, "
+                  f"count {'OK' if qa['count_ok'] else 'thin'}", "",
                   "| keyword | tier | intent | placement | relevance |", "|---|---|---|---|---|"]
-            for k in sorted(out.get("keywords", []), key=lambda x: -float(x.get("relevance", 0))):
+            for k in sorted(kw_clean, key=lambda x: -float(x.get("relevance", 0))):
                 md.append(f"| {k['keyword']} | {k['tier']} | {k['intent']} | {k['placement']} | {float(k.get('relevance',0)):.2f} |")
             path = ctx.write_artifact(f"keywords-c{cand['id']}.md", "\n".join(md) + "\n")
             done.append(f"#{cand['id']} +{len(rows)} terms ({path.name})")

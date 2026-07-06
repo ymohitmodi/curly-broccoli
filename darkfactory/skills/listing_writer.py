@@ -5,7 +5,10 @@ model). Publishing is human-gated."""
 
 from __future__ import annotations
 
+import json
+
 from .base import Skill, SkillContext, register
+from .. import quality
 
 TITLE_MAX = 200
 BULLET_MAX = 250
@@ -59,15 +62,31 @@ class ListingWriter(Skill):
                 genome=ctx.genome,
                 recall_query=f"listing copy conversion {cand['niche']}",
             )
-            out = ctx.llm.chat_json(messages, SCHEMA, model=getattr(ctx.llm, "worker_model", None))
+            worker = getattr(ctx.llm, "worker_model", None)
+            out = ctx.llm.chat_json(messages, SCHEMA, model=worker)
             out, violations = self._enforce_limits(out)
 
-            md = self._render(cand, out, violations)
+            # deterministic QA scorecard; one revision pass if it fails hard
+            tkw = title_kws or [k["keyword"] for k in kws[:8]]
+            qa = quality.listing_qa(out, title_keywords=tkw)
+            if len(qa["failures"]) > 2 and ctx.cfg.llm("refinement", True):
+                fix_list = "\n".join(f"- {f['name']}: {f['detail']}" for f in qa["failures"])
+                revise = messages + [
+                    {"role": "assistant", "content": json.dumps(out)},
+                    {"role": "user", "content":
+                        "Your draft failed these objective quality checks:\n" + fix_list +
+                        "\nFix every failure without breaking what passes. Return JSON only."},
+                ]
+                out = ctx.llm.chat_json(revise, SCHEMA, model=worker)
+                out, violations = self._enforce_limits(out)
+                qa = quality.listing_qa(out, title_keywords=tkw)
+
+            md = self._render(cand, out, violations, qa)
             path = ctx.write_artifact(f"listing-c{cand['id']}.md", md)
             ctx.memory.update_candidate(cand["id"], stage="listing")
             gate_msg = ctx.gate(self.name, "publish_listing",
                                 {"candidate_id": cand["id"], "name": cand["name"], "artifact": str(path)})
-            done.append(f"#{cand['id']} {cand['name'][:40]} ({gate_msg})")
+            done.append(f"#{cand['id']} {cand['name'][:40]} QA {qa['score']}/{qa['max']} ({gate_msg})")
 
         return {"summary": "Listing drafts: " + "; ".join(done)}
 
@@ -95,11 +114,20 @@ class ListingWriter(Skill):
         return out, violations
 
     @staticmethod
-    def _render(cand, out, violations) -> str:
+    def _render(cand, out, violations, qa) -> str:
         bullets = "\n".join(f"- {b}" for b in out.get("bullets", []))
         aplus = "\n".join(f"{i+1}. {m}" for i, m in enumerate(out.get("a_plus_outline", [])))
         note = ("\n> Auto-fixes applied: " + "; ".join(violations) + "\n") if violations else ""
+        scorecard = "\n".join(
+            f"| {'✓' if c['passed'] else '✕'} | {c['name']} | {c['detail']} |"
+            for c in qa["checks"])
         return f"""# Listing Draft — {cand['name']} (candidate #{cand['id']})
+
+**QA score: {qa['score']}/{qa['max']}** (deterministic checklist — every line verifiable)
+
+| | check | detail |
+|---|---|---|
+{scorecard}
 {note}
 ## Title ({len(out.get('title',''))}/{TITLE_MAX})
 {out.get('title')}

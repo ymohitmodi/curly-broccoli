@@ -18,6 +18,18 @@ never grows itself into a cash crunch and never bleeds avoidable fees.
 - Q4 rule: inventory landing Oct-Dec pays ~3× storage — either sell through
   fast with ads or delay the shipment; never park slow stock in peak season.
 
+## PO sizing arithmetic (show it, every time)
+- Reorder qty = (cover_target_days + lead_days) × daily_velocity − on_hand −
+  inbound, where daily_velocity is the CONSERVATIVE estimate: use the median
+  of recent weeks, never the best week; a viral spike in the input becomes
+  dead stock in the output.
+- Stress-test every plan at ±30% velocity: at −30%, when do you cross
+  max_days_of_stock (storage bleed)? at +30%, when do you stock out (rank
+  loss + low-inventory fee on the way back)? The plan must name both dates.
+- A stockout costs more than the lost sales: rank decays within days and
+  costs launch-grade PPC to rebuild. Between a mild overstock and a stockout,
+  overstock — EXCEPT into Q4 storage rates, where the math flips.
+
 ## Sequencing risks to always check
 - Two launches inside one cash cycle without ledger headroom
 - A reorder due while a new launch's balance payment is pending

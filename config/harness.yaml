@@ -20,6 +20,11 @@ llm:
   request_timeout_s: 420
   max_retries: 3
 
+  # Quality mode: money-deciding outputs (candidate scoring, listings) run
+  # draft → self-critique → revise, and PURSUE verdicts face an adversarial
+  # kill-review. ~2 extra calls per run of those skills; worth every token.
+  refinement: true
+
   # Daily budget circuit-breaker. The factory stops calling models (and logs
   # a SKIPPED episode) once this many calls have been made since midnight.
   max_calls_per_day: 300

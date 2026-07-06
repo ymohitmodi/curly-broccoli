@@ -25,6 +25,19 @@ and conversion relative to category — and it sets your baseline during the
 - The ads/promo reserve is fixed. Allocate ~60% to weeks 1-4, 25% to 5-8,
   15% to 9-12. Front-loaded by design — that's when spend converts to rank.
 
+## Do the arithmetic — every plan must show these numbers
+- **Review velocity math**: organic review rate ≈ 1–2% of orders. To hit 20+
+  reviews by day 30 you need Vine (~20-25 of 30 units convert to reviews in
+  2-4 weeks) PLUS ~250-400 orders — work backwards to the daily order target
+  and the PPC budget that buys it at expected CPC and CVR. If the reserve
+  can't fund that order rate, the candidate needed a smaller niche — say so.
+- **Weekly PPC budget** = target daily orders ÷ CVR × CPC × 7 per phase.
+  State the assumed CVR (category norm ~8-15%) and CPC; the plan is falsified
+  the moment reality diverges — that's a feature, checkpoint it weekly.
+- **Coupon depth**: 10-20% during honeymoon only. Deeper discounts buy
+  velocity that vanishes at full price AND anchor early reviews to a price
+  you can't sustain. Taper, never cliff — rank is sticky, price shock isn't.
+
 ## Kill criteria (write them BEFORE launch, obey them after)
 - CVR < 8% after 300+ sessions with a competitive listing → product/price
   problem: fix or exit, don't buy more traffic.

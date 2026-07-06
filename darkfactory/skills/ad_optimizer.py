@@ -1,14 +1,22 @@
-"""Skill 5 — ad_optimizer: PPC management on a rules-first basis.
+"""Skill 5 — ad_optimizer: PPC management with real bid math.
 
-Deterministic rules (in code) find the obvious moves from search-term data:
-bleeders → negatives, winners → exact harvest, bid steps toward target ACOS.
-The LLM then reviews the rule output for strategy-level adjustments it can't
-see (cannibalization, ranking plays). All bid/budget changes are human-gated
-— the factory produces a change sheet, you approve it."""
+Deterministic rules (in code) do the quantitative work with the actual
+formulas, not relative nudges:
+
+  bid a term is worth  = target ACOS × order value × smoothed CVR
+  negate at 95% conf   = 0 orders after ceil(ln .05 / ln(1-CVR_prior)) clicks
+                         (29 clicks at the 10% cross-category CVR prior)
+  CVR is Bayesian-smoothed so 3 clicks never reads as a 33% conversion rate.
+
+Every recommendation shows its arithmetic — you can check any line by hand.
+The LLM then reviews the sheet for structure-level plays the formulas can't
+see (cannibalization, ranking pushes, intent mismatch). All bid/budget
+changes are human-gated."""
 
 from __future__ import annotations
 
 from .base import Skill, SkillContext, register
+from .. import quality
 
 SCHEMA = {
     "type": "object",
@@ -34,27 +42,53 @@ class AdOptimizer(Skill):
 
         params = ctx.genome_params()
         target_acos = params.get("ad_target_acos", 0.30)
-        step = params.get("ad_bid_step", 0.15)
+        neg_clicks = quality.negative_confidence_clicks(0.95)
 
         actions = []
         for c in campaigns:
+            # campaign AOV as the fallback order value for zero-order terms
+            c_orders = sum(t.get("orders", 0) for t in c.get("search_terms", []))
+            c_sales = sum(t.get("sales", 0) for t in c.get("search_terms", []))
+            aov_fallback = (c_sales / c_orders) if c_orders else 25.0
+
             for t in c.get("search_terms", []):
-                spend, sales, clicks = t.get("spend", 0), t.get("sales", 0), t.get("clicks", 0)
-                acos = (spend / sales) if sales else None
-                if clicks >= 12 and t.get("orders", 0) == 0:
-                    actions.append({"campaign": c["campaign"], "action": "negative_exact",
-                                    "term": t["term"], "reason": f"{clicks} clicks, 0 orders, ${spend:.0f} bled"})
-                elif acos is not None and acos > target_acos * 1.5 and clicks >= 10:
-                    actions.append({"campaign": c["campaign"], "action": "lower_bid",
-                                    "term": t["term"], "delta": f"-{step:.0%}",
-                                    "reason": f"ACOS {acos:.0%} vs target {target_acos:.0%}"})
-                elif acos is not None and acos < target_acos * 0.7 and t.get("orders", 0) >= 3:
-                    actions.append({"campaign": c["campaign"], "action": "raise_bid_or_harvest_exact",
-                                    "term": t["term"], "delta": f"+{step:.0%}",
-                                    "reason": f"ACOS {acos:.0%} well under target — scale winner"})
-            if c.get("acos") and c["acos"] < target_acos * 0.8 and c.get("spend_14d", 0) > 0.8 * 14 * c.get("daily_budget", 1):
-                actions.append({"campaign": c["campaign"], "action": "raise_budget", "delta": "+20%",
-                                "reason": f"budget-capped at ACOS {c['acos']:.0%} < target"})
+                spend, sales = t.get("spend", 0), t.get("sales", 0)
+                clicks, orders = t.get("clicks", 0), t.get("orders", 0)
+                if clicks < 5:
+                    continue  # not enough signal to judge anything
+                cpc = spend / clicks
+                aov = (sales / orders) if orders else aov_fallback
+                cvr = quality.smoothed_cvr(orders, clicks)
+                worth = quality.target_cpc(target_acos, aov, cvr)
+
+                if orders == 0 and (clicks >= neg_clicks or spend >= 1.5 * aov_fallback):
+                    actions.append({
+                        "campaign": c["campaign"], "action": "negative_exact", "term": t["term"],
+                        "delta": "—",
+                        "reason": (f"{clicks} clicks, 0 orders, ${spend:.0f} bled — at a 10% CVR "
+                                   f"prior, P(still no order)≈{(1-quality.CVR_PRIOR)**clicks:.0%}; "
+                                   "this term does not convert for this product")})
+                elif cpc > worth * 1.25 and clicks >= 8:
+                    actions.append({
+                        "campaign": c["campaign"], "action": "lower_bid_to_target", "term": t["term"],
+                        "delta": f"→ ${worth:.2f}",
+                        "reason": (f"paying ${cpc:.2f}/click; worth = {target_acos:.0%} ACOS × "
+                                   f"${aov:.2f} AOV × {cvr:.1%} CVR = ${worth:.2f}")})
+                elif cpc < worth * 0.8 and orders >= 2:
+                    actions.append({
+                        "campaign": c["campaign"], "action": "raise_bid_and_harvest_exact",
+                        "term": t["term"], "delta": f"→ ${worth:.2f}",
+                        "reason": (f"paying ${cpc:.2f} for a term worth ${worth:.2f} "
+                                   f"({orders} orders, {cvr:.1%} CVR) — buy the impression "
+                                   "share you're leaving to competitors; own it in exact")})
+
+            if c.get("acos") and c["acos"] < target_acos * 0.8 \
+                    and c.get("spend_14d", 0) > 0.8 * 14 * c.get("daily_budget", 1):
+                actions.append({"campaign": c["campaign"], "action": "raise_budget",
+                                "delta": "+20%", "term": "—",
+                                "reason": (f"spending {c['spend_14d']/(14*c['daily_budget']):.0%} of budget "
+                                           f"at {c['acos']:.0%} ACOS vs {target_acos:.0%} target — "
+                                           "budget cap is the binding constraint, not efficiency")})
 
         messages = ctx.prompts.build(
             self.name,

@@ -49,6 +49,18 @@ the factory grinds; you approve the money moves and read one daily digest.
   data dominates fitness, so Darwin optimizes for money, not vibes.
 - **Nothing spends without you.** Orders, listing publishes, bid changes go
   to an approval queue. Dark factory ≠ unsupervised wallet.
+- **Model output is never trusted raw.** Money-deciding outputs run
+  draft → self-critique → revise; every PURSUE verdict must survive an
+  adversarial kill-review (a devil's-advocate pass whose job is to lose you
+  one idea instead of $8,000); scores without cited numbers are damped in
+  code; listings face a 12-point deterministic QA checklist with an automatic
+  rewrite; keyword maps are dedup/mix-enforced with a corrective re-prompt;
+  PPC bids come from the actual formula (target ACOS × AOV × Bayesian-smoothed
+  CVR) and negatives require 95% statistical confidence (`quality.py`).
+- **Evolution can't grade its own homework.** Genome fitness is judged by a
+  code-computed objective score (margin, ROI, demand, moat from raw data) —
+  never by the genome-weighted composite — so Darwin rewards genomes that
+  *pick* good products, not genomes that *flatter* them.
 - **Free-first data.** Ships with an offline sample provider (runs day one),
   Google Trends (free), and a wired skeleton for Amazon SP-API + Ads API —
   which are *free for registered sellers* and the ToS-compliant way to get
