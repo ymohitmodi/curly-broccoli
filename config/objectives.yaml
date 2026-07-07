@@ -1,0 +1,96 @@
+# ============================================================
+# YOUR BUSINESS OBJECTIVES — the only file you MUST edit.
+# Every skill reads this. The evolution engine optimizes
+# strategy parameters *within* these hard constraints.
+# ============================================================
+
+mission: >
+  Find, launch, and scale high-margin, high-turnover, high-rating
+  private-label products on Amazon US (FBA), sourced from Alibaba
+  suppliers, with sea freight (~45 days) from China to FBA.
+
+seller_profile:
+  marketplace: US
+  location: Austin, TX
+  fulfillment: FBA
+  sourcing: Alibaba (China), sea freight ~45 days door-to-warehouse
+  experience_level: intermediate
+
+# Categories the factory is ALLOWED to hunt in. Keep this tight —
+# focus beats breadth. Add/remove as you learn.
+categories:
+  - Home & Kitchen
+  - Sports & Outdoors
+  - Patio, Lawn & Garden
+  - Office Products
+  - Pet Supplies
+
+# Hard exclusions — candidates violating any of these are dropped
+# before they ever reach the LLM (saves tokens and bad ideas).
+exclusions:
+  - electronics or anything with a battery/charger (returns, hazmat, certification)
+  - ingestibles, supplements, topicals (FDA/liability)
+  - children's products requiring CPC testing unless margin > 50%
+  - fragile items (glass, ceramic) — sea freight + FBA handling damage
+  - oversize tier items (storage + freight kills margin)
+  - patented or heavily-branded designs (IP risk)
+  - seasonal-only products (< 8 sellable months/year)
+
+# Hard economic gates (post-landed-cost, post-FBA-fee, post-referral):
+constraints:
+  launch_budget_usd: 8000            # max total cash into one product's first order
+  min_sale_price_usd: 17             # below this FBA fees eat you
+  max_sale_price_usd: 65             # above this conversion needs brand trust
+  min_net_margin_pct: 0.35           # after ALL costs incl. freight, duty, returns
+  min_roi_pct: 1.00                  # 100% ROI on landed cost, minimum
+  max_unit_weight_kg: 1.5            # keeps sea freight + FBA fees sane
+  min_monthly_revenue_niche_usd: 40000   # niche must be big enough to matter
+  max_top10_avg_reviews: 900         # review moat you're willing to attack
+  min_top10_lowest_reviews: 0        # at least one top-10 seller should be weak
+  target_monthly_units: 300          # what "high turnover" means to you
+  max_days_of_stock: 90              # capital discipline
+  target_rating: 4.5                 # "delightful product" bar
+
+# Risk posture for the Darwin engine's mutations (0 = ultra conservative,
+# 1 = aggressive). Affects how far strategy parameters may drift per generation.
+risk_appetite: 0.4
+
+# Default economics assumptions used by the landed-cost model when a
+# candidate doesn't yet have real quotes. Update as you get real numbers.
+# 2026 reality baked in: tariff stack on Chinese consumer goods is ~35%
+# effective (MFN base + 25% Section 301 + 10% Section 122; the 20% IEEPA
+# surcharge was struck down Feb 2026). De minimis is dead — everything
+# clears formal entry. Amazon added a 3.5% fuel surcharge on fulfillment
+# fees (Apr 2026), restructured inbound placement fees (Jan 2026), and
+# charges a low-inventory-level fee (~$0.89-1.10/unit) when supply drops
+# below ~28 days against a 35-day threshold.
+economics_defaults:
+  sea_freight_per_kg_usd: 1.9
+  duty_rate: 0.35                    # 2026 China stack (S301 25% + S122 10%)
+  referral_rate: 0.15
+  returns_rate: 0.03
+  storage_per_unit_month_usd: 0.45   # Jan-Sep rate; Oct-Dec peak is ~3x
+  misc_rate: 0.02                    # inspection, prep, defects
+  fuel_surcharge_rate: 0.035         # on FBA fulfillment fee, eff. Apr 2026
+  inbound_placement_per_unit_usd: 0.30  # ~0 if using Amazon-optimized splits (5+ identical cartons)
+  low_inventory_fee_risk_usd: 0.10   # expected value of the low-inventory fee
+  fba_fee_by_weight_kg:              # rough US FBA fulfillment fee ladder
+    0.2: 3.5
+    0.5: 4.0
+    0.9: 5.4
+    1.5: 6.9
+
+# Cash-flow model inputs — THE silent killer. A typical FBA launch is ~20
+# weeks of working capital (wire day 0 → live ~day 80 → cash recovered
+# day 140+), and most sellers underestimate it by ~30%. The factory
+# computes this before every PO approval.
+cashflow:
+  supplier_deposit_frac: 0.30        # 30/70 payment terms
+  production_days: 30
+  freight_days: 45                   # sea, door to FBA
+  fba_checkin_days: 7
+  amazon_payout_lag_days: 14
+  low_inventory_threshold_days: 35   # Amazon's 2026 threshold
+  min_capital_turns_per_year: 2.0    # reject products that lock cash too long
+  max_launch_cash_frac: 0.75         # a PO may consume at most 75% of launch budget
+                                     # (rest is reserved for ads/Vine/photos)

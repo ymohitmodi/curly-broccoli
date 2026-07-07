@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Friendly shortcut so you never type Python syntax:
+#   ./df status | ./df approvals | ./df approve 3 | ./df candidates
+#   ./df once product_research | ./df log-outcome 7 --monthly-units 340 ...
+DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="$DIR/.venv/bin/python"
+[ -x "$PY" ] || PY="$(command -v python3)"
+exec "$PY" -m darkfactory "$@"

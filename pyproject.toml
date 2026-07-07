@@ -1,0 +1,26 @@
+[project]
+name = "darkfactory"
+version = "0.1.0"
+description = "24/7 agentic AI harness for Amazon FBA private-label sellers: product selection, sourcing, SEO, listings, and PPC — driven by Ollama cloud models with Darwinian strategy evolution."
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+trends = ["pytrends>=4.9"]
+spapi = ["python-amazon-sp-api>=1.8"]
+
+[project.scripts]
+darkfactory = "darkfactory.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["darkfactory*"]
+
+[tool.setuptools.package-data]
+darkfactory = ["datasources/fixtures/*.json", "console_ui.html"]

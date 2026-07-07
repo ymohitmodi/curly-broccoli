@@ -1,0 +1,35 @@
+[
+  {
+    "campaign": "MagSpiceRack-Auto-Launch",
+    "type": "auto",
+    "daily_budget": 25.0,
+    "spend_14d": 310.5,
+    "sales_14d": 720.0,
+    "acos": 0.43,
+    "impressions": 91000,
+    "clicks": 610,
+    "orders": 26,
+    "search_terms": [
+      {"term": "magnetic spice rack", "clicks": 140, "orders": 9, "spend": 88.0, "sales": 247.5},
+      {"term": "spice rack for fridge", "clicks": 95, "orders": 7, "spend": 52.0, "sales": 192.5},
+      {"term": "fridge organizer", "clicks": 120, "orders": 2, "spend": 71.0, "sales": 55.0},
+      {"term": "spice jars with labels", "clicks": 60, "orders": 0, "spend": 34.0, "sales": 0.0},
+      {"term": "magnetic shelf for refrigerator", "clicks": 75, "orders": 6, "spend": 41.5, "sales": 165.0}
+    ]
+  },
+  {
+    "campaign": "MagSpiceRack-Exact-Core",
+    "type": "manual_exact",
+    "daily_budget": 20.0,
+    "spend_14d": 205.0,
+    "sales_14d": 880.0,
+    "acos": 0.23,
+    "impressions": 24000,
+    "clicks": 380,
+    "orders": 32,
+    "search_terms": [
+      {"term": "magnetic spice rack for refrigerator", "clicks": 210, "orders": 21, "spend": 118.0, "sales": 577.5},
+      {"term": "magnetic spice rack", "clicks": 170, "orders": 11, "spend": 87.0, "sales": 302.5}
+    ]
+  }
+]

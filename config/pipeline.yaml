@@ -1,0 +1,91 @@
+# ============================================================
+# THE VALIDATION LADDER — how winners actually de-risk.
+#
+# The honest math: no recipe wins 90% of launches. Elite operators
+# win 90%+ of their CAPITAL by making losers die cheap and early.
+# Each gate caps what a candidate may cost you before it has earned
+# the next tranche. Kill criteria are written BEFORE money moves.
+# Edit thresholds to taste — the engine (stage_gate skill) obeys this file.
+# ============================================================
+
+gates:
+  G1_shortlist:
+    label: "Shortlisted"
+    max_capital_usd: 0
+    auto: true          # earned by surviving scoring + the adversarial kill-review
+    next: G2_validate
+
+  G2_validate:
+    label: "Desk validation"
+    max_capital_usd: 150     # polls + data, nothing else
+    next: G3_sample
+    evidence:
+      demand_verified:
+        task: "Verify real demand: pull the niche in a real data source (SP-API /
+          Helium10 free tier / Jungle Scout) and drop the export in
+          workspace/inbox/market/. Confirm volume is >= 50% of the estimate
+          the factory scored."
+      concept_poll_won:
+        task: "Run a PickFu-style poll (~$50): your concept render/photo vs. the
+          top 3 competitor main images, 50 respondents. Ask 'which would you
+          buy and why'. Record the preference share."
+      three_quotes_in:
+        task: "Send the factory's RFQ to >= 5 Alibaba suppliers; get >= 3 real
+          quotes. At least one must clear the walkaway FOB in the sourcing
+          package."
+    kill_if:
+      - "poll preference < 40% against competitors (buyers don't want it)"
+      - "no quote clears walkaway FOB (economics were fantasy)"
+      - "real search volume < 50% of scored estimate (demand was fantasy)"
+
+  G3_sample:
+    label: "Golden sample"
+    max_capital_usd: 300
+    next: G4_test_batch
+    evidence:
+      samples_ordered:
+        task: "Order samples from the 2 best-quoting suppliers (~$60-120 incl.
+          express shipping)."
+      sample_scorecard_passed:
+        task: "Score each sample against the QC checklist in the sourcing
+          package: does it PROVABLY fix the #1 complaint (measure it — pull
+          force, ridge depth, whatever the spec says)? Finish, packaging
+          survival, weight vs. quote. Photograph everything."
+    kill_if:
+      - "no sample meets the differentiation acceptance criteria after one
+         revision round with the supplier (the fix can't be manufactured at
+         this price — the whole thesis fails)"
+
+  G4_test_batch:
+    label: "Micro test (air)"
+    max_capital_frac: 0.25   # of launch budget, ALL-IN (units + air + ads)
+    next: G5_scale
+    evidence:
+      test_batch_live:
+        task: "Order 150-300 units AIR freight (yes, worse unit economics —
+          you are buying INFORMATION 5 weeks sooner: real CVR, real CPC,
+          real reviews). List it, run the launch plan at small scale."
+      test_metrics_pass:
+        task: "After ~3 weeks live: record sessions, CVR, CPC, rating in the
+          console (log real results on the candidate). Pass bar: CVR >= 8%,
+          rating >= 4.4 on >= 10 reviews, real CPC <= 1.5x the launch plan's
+          assumption."
+    kill_if:
+      - "CVR < 5% after 300+ sessions with a competitive listing (market said no)"
+      - "rating < 4.0 (product not ready — fix via review mining or exit)"
+      - "real CPC > 2x plan (the keyword market is priced beyond your margin)"
+
+  G5_scale:
+    label: "Scale (sea)"
+    max_capital_frac: 0.75
+    next: null
+    evidence:
+      scale_po_placed:
+        task: "Place the full sea-freight PO at the negotiated FOB. The test
+          batch's real velocity replaces every estimate in the reorder math."
+    kill_if:
+      - "test-batch economics don't hold at scale quote (renegotiate or exit)"
+
+# Advancing INTO a capital gate (G4, G5) additionally requires your
+# signature in the approval queue — evidence alone never spends money.
+capital_gates: [G4_test_batch, G5_scale]

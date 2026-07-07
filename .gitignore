@@ -1,0 +1,14 @@
+# Runtime state — never commit business data
+workspace/
+*.db
+*.sqlite3
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
