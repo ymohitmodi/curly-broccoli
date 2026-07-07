@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS approvals (
     id INTEGER PRIMARY KEY, ts TEXT, skill TEXT, action TEXT,
     payload TEXT, status TEXT DEFAULT 'pending', resolved_at TEXT
 );
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY, ts TEXT, candidate_id INTEGER, gate TEXT,
+    evidence_flag TEXT, title TEXT, instructions TEXT,
+    status TEXT DEFAULT 'open', resolved_at TEXT,
+    UNIQUE(candidate_id, evidence_flag)
+);
 """
 
 
@@ -236,6 +242,38 @@ class Memory:
         self.conn.execute("UPDATE approvals SET status=?, resolved_at=? WHERE id=?",
                           (status, _now(), aid))
         self.conn.commit()
+
+    # ---- human task queue (the factory directs, you execute) -------------
+    def add_task(self, candidate_id: int, gate: str, evidence_flag: str,
+                 title: str, instructions: str) -> int | None:
+        """Idempotent: one open task per (candidate, evidence_flag)."""
+        cur = self.conn.execute(
+            "INSERT OR IGNORE INTO tasks(ts,candidate_id,gate,evidence_flag,title,instructions) "
+            "VALUES(?,?,?,?,?,?)",
+            (_now(), candidate_id, gate, evidence_flag, title, instructions))
+        self.conn.commit()
+        return cur.lastrowid if cur.rowcount else None
+
+    def list_tasks(self, status: str = "open") -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT * FROM tasks WHERE status=? ORDER BY candidate_id, id", (status,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def complete_task(self, task_id: int) -> dict | None:
+        row = self.conn.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
+        if not row:
+            return None
+        self.conn.execute("UPDATE tasks SET status='done', resolved_at=? WHERE id=?",
+                          (_now(), task_id))
+        self.conn.commit()
+        task = dict(row)
+        # completing a task records its evidence on the candidate
+        cand = self.get_candidate(task["candidate_id"])
+        if cand and task["evidence_flag"]:
+            data = cand.get("data") or {}
+            data.setdefault("gate_evidence", {})[task["evidence_flag"]] = True
+            self.update_candidate(cand["id"], data=data)
+        return task
 
     def close(self):
         self.conn.close()

@@ -49,6 +49,7 @@ schedule:
   ad_optimizer: 12
   review_miner: 24
   inventory_planner: 12 # cash conversion cycle, reorder points, WC ledger
+  stage_gate: 12        # validation ladder: evidence, capital caps, kill criteria
   evolution: 168        # weekly Darwin generation
   digest: 24            # daily owner's report
 
@@ -60,6 +61,7 @@ require_approval:
   - change_bids
   - change_budget
   - place_order
+  - advance_gate        # entering a capital gate (test batch / scale) needs you
 
 context:
   budget_chars: 28000   # max prompt size assembled by the context manager

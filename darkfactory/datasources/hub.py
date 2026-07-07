@@ -26,7 +26,15 @@ class DataHub:
         self.trends_provider = ds.get("trends", "auto")
 
     def market_snapshot(self, categories: list[str]) -> list[dict]:
-        """Niche-level metrics: search volume, price band, top-10 review counts, revenue."""
+        """Niche-level metrics: search volume, price band, top-10 review counts, revenue.
+
+        Priority: YOUR real data (CSV exports in workspace/inbox/market/)
+        always wins; then the configured provider. Data blindness is the #1
+        gap between this harness and a good human — close it with real files."""
+        from . import imports
+        rows, _ = imports.load_inbox_market(self.cfg.workspace)
+        if rows:
+            return rows
         if self.market_provider == "spapi":
             return spapi.market_snapshot(categories)
         return sample.market_snapshot(categories)

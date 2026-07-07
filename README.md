@@ -305,6 +305,34 @@ system doing its job.
 | Funnel empty for a week | Your gates are (correctly) strict, or market data is stale | See "Improving" ladder below — loosen ONE constraint at a time, or wire real data |
 | An approval you don't understand | Never approve blind | Open the artifact file named in the approval; if still unclear, `./df reject <id>` — rejecting is always safe |
 
+## What's automated vs. what needs your hands (the honest split)
+
+**Fully automated (the factory alone):** market scanning + hard filtering,
+candidate scoring with adversarial review, all unit-economics/cash/PPC math,
+RFQ + negotiation packages, keyword maps, listing drafts with QA, launch
+plans, review mining, reorder/working-capital ledgers, strategy evolution,
+the daily digest, self-diagnosis (Doctor).
+
+**You, always (the factory directs, you execute):** everything with hands or
+a wallet — chatting with suppliers, judging a physical sample, clicking
+"publish" in Seller Central, applying bid changes in the ads console,
+photography, and every approval. The **validation ladder** turns this into
+precise work orders with instructions (console Dashboard → "Your work
+orders"), so your hours go where they multiply.
+
+**The ladder (config/pipeline.yaml)** encodes how elite operators actually
+de-risk — nobody wins 90% of launches; they win 90%+ of their *capital* by
+making losers die cheap: desk validation ($150 cap: real data pull, a
+PickFu-style concept poll, 3 real quotes) → golden sample ($300 cap, scored
+against the spec) → **air-freight micro-test** (25% of budget, buys real
+CVR/CPC/reviews 5 weeks early, auto-sized to the tranche) → sea-freight
+scale (75%). Kill criteria are pre-committed in writing and travel with
+every approval, and capital gates always require your signature.
+
+**Real data beats everything:** drop any research CSV (Helium10, Jungle
+Scout, your own sheet) into `workspace/inbox/market/` — columns are matched
+loosely and your data instantly replaces the bundled fixtures.
+
 ## How to improve results — the ladder (climb one rung at a time)
 
 **Rung 1 — Make the objectives truly yours (day 1, 15 min).**

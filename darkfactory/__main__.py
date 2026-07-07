@@ -44,6 +44,9 @@ def main(argv=None):
     lo.add_argument("--cash-cycle-days", type=float, default=None,
                     help="days from supplier wire to full cash recovery — rewards capital velocity in fitness")
     sub.add_parser("evolve")
+    sub.add_parser("tasks")
+    td = sub.add_parser("task-done")
+    td.add_argument("task_id", type=int)
     con = sub.add_parser("console")
     con.add_argument("--port", type=int, default=8787)
     con.add_argument("--no-browser", action="store_true")
@@ -99,6 +102,19 @@ def main(argv=None):
                                 f"candidate #{args.candidate_id} real results: "
                                 f"{args.monthly_units:.0f} u/mo, {args.margin_pct:.0%} margin, {args.rating}★")
         print("outcome logged — Darwin will use it at the next evolution step.")
+    elif args.cmd == "tasks":
+        tasks = orch.memory.list_tasks("open")
+        if not tasks:
+            print("No open tasks — the ladder is waiting on the factory, not you.")
+        for t in tasks:
+            print(f"#{t['id']:>3} [{t['gate']}] {t['title']}\n     {t['instructions']}\n")
+    elif args.cmd == "task-done":
+        t = orch.memory.complete_task(args.task_id)
+        if not t:
+            sys.exit(f"no task #{args.task_id}")
+        orch.memory.log_episode("owner", "task_done", f"task #{t['id']} done: {t['title'][:80]}")
+        print(f"✓ done — evidence '{t['evidence_flag']}' recorded on candidate #{t['candidate_id']}. "
+              "The ladder advances on the next stage_gate run.")
     elif args.cmd == "evolve":
         print(orch.run_skill("evolution").get("summary"))
 

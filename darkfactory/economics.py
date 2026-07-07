@@ -130,6 +130,53 @@ def launch_cash_plan(cfg, po_units: int, landed_unit_cost: float, unit_profit: f
     }
 
 
+def test_batch_plan(cfg, fob_unit: float, unit_weight_kg: float, sale_price: float,
+                    units: int = 200, air_freight_per_kg: float = 6.5) -> dict:
+    """Economics of an air-freight micro-test (gate G4). Worse unit economics
+    on purpose: you are paying to learn the truth (real CVR, real CPC, real
+    reviews) ~5 weeks sooner and with ~25% of the capital at risk instead of
+    100%. The right way to read this plan: `max_loss` is the price of the
+    information; compare it to the full PO you would otherwise risk blind."""
+    d = cfg.objectives.get("economics_defaults", {})
+    econ = UnitEconomics(
+        sale_price=sale_price, fob_unit=fob_unit, unit_weight_kg=unit_weight_kg,
+        sea_freight_per_kg=air_freight_per_kg,  # air replaces sea for the test
+        duty_rate=d.get("duty_rate", 0.35),
+        referral_rate=d.get("referral_rate", 0.15),
+        returns_rate=d.get("returns_rate", 0.03),
+        storage_per_unit=d.get("storage_per_unit_month_usd", 0.45),
+        misc_rate=d.get("misc_rate", 0.02),
+        fuel_surcharge_rate=d.get("fuel_surcharge_rate", 0.035),
+        inbound_placement_per_unit=d.get("inbound_placement_per_unit_usd", 0.30),
+        low_inventory_fee_risk=d.get("low_inventory_fee_risk_usd", 0.10),
+        fba_fee_ladder=d.get("fba_fee_by_weight_kg"),
+    ).compute()
+    budget = cfg.constraint("launch_budget_usd", 8000)
+    cap = cfg.objectives.get("cashflow", {}).get("test_batch_cap_frac", 0.25) * budget
+    # auto-size the batch to the capital tranche: ads = min(1500, 0.5×batch)
+    # so batch <= cap/1.5 while ads scale, else cap-1500
+    requested = units
+    max_batch_cost = max(cap / 1.5, cap - 1500.0)
+    units = max(50, min(units, int(max_batch_cost / max(econ["landed_cost"], 0.01))))
+    batch_cost = units * econ["landed_cost"]
+    test_ads = min(1500.0, 0.5 * batch_cost)
+    all_in = batch_cost + test_ads
+    return {
+        "units": units,
+        "units_requested": requested,
+        "sized_down": units < requested,
+        "unit_economics_at_air": econ,
+        "batch_cost": round(batch_cost, 2),
+        "test_ad_budget": round(test_ads, 2),
+        "all_in": round(all_in, 2),
+        "within_cap": all_in <= cap,
+        "cap_usd": round(cap, 2),
+        # worst case: liquidate at ~40% of price after fees
+        "max_loss": round(all_in - units * sale_price * 0.4, 2),
+        "days_to_signal": 30 + 10 + 21,  # production + air+checkin + 3 weeks live
+    }
+
+
 def reorder_plan(cfg, units_on_hand: float, units_inbound: float,
                  monthly_units: float, cover_target_days: float = 75) -> dict:
     """Reorder math against the 2026 fee squeeze: stay ABOVE the low-inventory

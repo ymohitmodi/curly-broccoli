@@ -80,6 +80,7 @@ def overview(cfg) -> dict:
         return {
             "skills": skills,
             "approvals_pending": len(mem.list_approvals("pending")),
+            "tasks": mem.list_tasks("open")[:20],
             "funnel": funnel,
             "verdicts": verdicts,
             "top_pursue": [{"id": c["id"], "name": c["name"], "stage": c["stage"],
@@ -465,6 +466,19 @@ class Handler(BaseHTTPRequestHandler):
                     mem.close()
                 return self._send(200, {"ok": True,
                                         "message": "Logged. Darwin uses this at the next evolution step."})
+            if len(parts) == 4 and parts[:2] == ["api", "tasks"] and parts[3] == "done":
+                mem = _mem(cfg)
+                try:
+                    t = mem.complete_task(int(parts[2]))
+                    if not t:
+                        return self._send(404, {"error": "no such task"})
+                    mem.log_episode("owner", "task_done",
+                                    f"task #{t['id']} done from console: {t['title'][:80]}")
+                finally:
+                    mem.close()
+                return self._send(200, {"ok": True,
+                                        "message": f"Evidence '{t['evidence_flag']}' recorded — "
+                                                   "the ladder advances on the next stage_gate run."})
             if len(parts) == 4 and parts[:2] == ["api", "skills"] and parts[3] == "run":
                 from .skills import SKILLS
                 if parts[2] not in SKILLS:

@@ -35,6 +35,14 @@ class Digest(Skill):
         else:
             md.append("- (empty — nothing blocked on you)")
 
+        tasks = mem.list_tasks("open")
+        md += ["", "## 🧗 Your work orders (the ladder is waiting on these)"]
+        if tasks:
+            for t in tasks[:12]:
+                md.append(f"- **#{t['id']}** {t['title']} → `darkfactory task-done {t['id']}` when done")
+        else:
+            md.append("- (none — nothing on the validation ladder needs your hands)")
+
         md += ["", "## Product funnel"]
         for k, v in sorted(funnel.items()):
             md.append(f"- {k}: {v}")

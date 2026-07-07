@@ -16,6 +16,7 @@ from . import (  # noqa: F401  (import for side-effect: registration)
     ad_optimizer,
     review_miner,
     inventory_planner,
+    stage_gate,
     evolution_skill,
     digest,
 )

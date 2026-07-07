@@ -238,6 +238,15 @@ async function dash(){
     </div>
   </div>
 
+  ${o.tasks&&o.tasks.length?`<h2>🧗 Your work orders — the validation ladder is waiting on you</h2>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    ${o.tasks.map(t=>`<div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--hair);padding-bottom:10px">
+      <div style="flex:1"><b style="font-size:13.5px">${esc(t.title)}</b>
+      <div style="font-size:13px;color:var(--ink2);margin-top:2px">${esc(t.instructions)}</div></div>
+      <button class="btn primary" style="flex:none" onclick="taskDone(${t.id},this)">Mark done</button>
+    </div>`).join("")}
+  </div>`:""}
+
   <h2>Product funnel</h2>
   <div class="card"><div class="fun">
     ${stages.map((s,i)=>{const n=o.funnel[s]||0;return `<div class="r"><span class="lbl">${s}</span>
@@ -257,6 +266,12 @@ async function dash(){
     <td>${s.failures>0?`<span class="chip crit">✕ ${s.failures} failures</span>`:s.due?'<span class="chip warn">⚠ due</span>':'<span class="chip good">✓ on schedule</span>'}</td>
     <td class="num"><button class="btn" onclick="runSkill('${s.name}',this)">Run now</button></td></tr>`).join("")}
   </table></div>`;
+}
+
+async function taskDone(id,btn){
+  btn.disabled=true;
+  try{const r=await post(`/api/tasks/${id}/done`);toast("✓ "+r.message);route()}
+  catch(e){btn.disabled=false;toast("✕ "+e.message)}
 }
 
 /* ------------------------------------------------ skills */
